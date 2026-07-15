@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الإحصائيات — أرشيف أبو علي الشيباني</title>
+<style>
+:root{
+  --bg:#f6f3ec; --panel:#fffdf8; --ink:#2b2620; --muted:#7a7060;
+  --accent:#0f766e; --accent-soft:#e4f2f0; --border:#e3dccc;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#171512; --panel:#211e19; --ink:#ece7dd; --muted:#a39a89;
+        --accent:#2dd4bf; --accent-soft:#123f3a; --border:#3a352c;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif;line-height:1.7}
+.wrap{max-width:800px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:1.4rem;margin:0 0 4px}
+a.back{color:var(--accent);text-decoration:none;font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.card .num{font-size:2rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.card .lbl{color:var(--muted);font-size:.85rem}
+h2{font-size:1.05rem;margin:26px 0 10px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:right;
+  font-variant-numeric:tabular-nums}
+th{background:var(--accent-soft);font-size:.85rem}
+.muted{color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← العودة إلى البحث</a>
+  <h1>إحصائيات الاستخدام</h1>
+  <div class="muted" id="since"></div>
+
+  <div class="cards">
+    <div class="card"><div class="num" id="total">…</div><div class="lbl">إجمالي عمليات البحث</div></div>
+    <div class="card"><div class="num" id="ips">…</div><div class="lbl">عناوين IP فريدة</div></div>
+    <div class="card"><div class="num" id="search">…</div><div class="lbl">بحث دلالي 🔍</div></div>
+    <div class="card"><div class="num" id="ask">…</div><div class="lbl">أسئلة ذكية 🤖</div></div>
+    <div class="card"><div class="num" id="today">…</div><div class="lbl">عمليات اليوم</div></div>
+    <div class="card"><div class="num" id="today-ips">…</div><div class="lbl">زوار اليوم (IP)</div></div>
+  </div>
+
+  <h2>آخر 14 يوماً</h2>
+  <table>
+    <thead><tr><th>اليوم</th><th>عمليات البحث</th><th>عناوين IP فريدة</th></tr></thead>
+    <tbody id="days"></tbody>
+  </table>
+</div>
+<script>
+fetch('/api/statistics').then(r=>r.json()).then(d=>{
+  const set=(id,v)=>document.getElementById(id).textContent=(v??0).toLocaleString('ar-EG');
+  set('total',d.total_queries); set('ips',d.unique_ips);
+  set('search',d.search_queries); set('ask',d.ask_queries);
+  set('today',d.today_queries); set('today-ips',d.today_unique_ips);
+  document.getElementById('since').textContent = d.since ? `منذ ${d.since}` : 'لا توجد بيانات بعد';
+  const tb=document.getElementById('days');
+  (d.per_day||[]).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.date}</td><td>${r.queries.toLocaleString('ar-EG')}</td><td>${r.unique_ips.toLocaleString('ar-EG')}</td>`;
+    tb.appendChild(tr);
+  });
+  if(!(d.per_day||[]).length){
+    tb.innerHTML='<tr><td colspan="3" class="muted">لا يوجد نشاط في الفترة الأخيرة</td></tr>';
+  }
+});
+</script>
+</body>
+</html>

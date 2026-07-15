@@ -3,3 +3,4 @@ __pycache__/
 index/
 *.log
 nohup.out
+stats.sqlite

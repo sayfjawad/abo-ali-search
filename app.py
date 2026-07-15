@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -22,6 +22,7 @@ from embedder import Embedder
 BASE = Path(__file__).parent
 INDEX_DIR = BASE / "index"
 MEDIA_DIR = Path("/data/ABO_ALI")
+STATS_DB = BASE / "stats.sqlite"  # outside index/ so re-indexing keeps history
 
 app = FastAPI(title="Abo Ali Smart Search")
 
@@ -49,6 +50,62 @@ def load_index():
         device=device,
     )
     print(f"index loaded: {matrix.shape[0]} chunks on {device}")
+
+
+# ------------------------------------------------------------- usage tracking
+def _stats_conn() -> sqlite3.Connection:
+    conn = sqlite3.connect(STATS_DB, timeout=10)
+    conn.execute("""CREATE TABLE IF NOT EXISTS queries (
+        ts TEXT DEFAULT (datetime('now')), mode TEXT, ip TEXT, query TEXT)""")
+    return conn
+
+
+def client_ip(request: Request) -> str:
+    # behind nginx: X-Real-IP / first hop of X-Forwarded-For; else socket peer
+    ip = request.headers.get("x-real-ip") or ""
+    if not ip:
+        fwd = request.headers.get("x-forwarded-for", "")
+        ip = fwd.split(",")[0].strip()
+    return ip or (request.client.host if request.client else "unknown")
+
+
+def log_query(request: Request, mode: str, query: str):
+    try:
+        with _stats_conn() as conn:
+            conn.execute(
+                "INSERT INTO queries (mode, ip, query) VALUES (?,?,?)",
+                (mode, client_ip(request), query[:500]),
+            )
+    except Exception as e:  # stats must never break search
+        print(f"stats logging failed: {e}")
+
+
+@app.get("/api/statistics")
+def api_statistics():
+    with _stats_conn() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM queries").fetchone()[0]
+        by_mode = dict(conn.execute(
+            "SELECT mode, COUNT(*) FROM queries GROUP BY mode").fetchall())
+        unique_ips = conn.execute(
+            "SELECT COUNT(DISTINCT ip) FROM queries").fetchone()[0]
+        today = conn.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT ip) FROM queries WHERE date(ts) = date('now')"
+        ).fetchone()
+        per_day = conn.execute("""
+            SELECT date(ts) d, COUNT(*), COUNT(DISTINCT ip)
+            FROM queries WHERE ts >= datetime('now','-14 days')
+            GROUP BY d ORDER BY d DESC""").fetchall()
+        first = conn.execute("SELECT MIN(date(ts)) FROM queries").fetchone()[0]
+    return {
+        "total_queries": total,
+        "search_queries": by_mode.get("search", 0),
+        "ask_queries": by_mode.get("ask", 0),
+        "unique_ips": unique_ips,
+        "today_queries": today[0],
+        "today_unique_ips": today[1],
+        "since": first,
+        "per_day": [{"date": d, "queries": q, "unique_ips": u} for d, q, u in per_day],
+    }
 
 
 # ------------------------------------------------------------------ retrieval
@@ -112,9 +169,10 @@ class SearchReq(BaseModel):
 
 
 @app.post("/api/search")
-def api_search(req: SearchReq):
+def api_search(req: SearchReq, request: Request):
     if not req.query.strip():
         raise HTTPException(400, "empty query")
+    log_query(request, "search", req.query)
     return {"results": retrieve(req.query, min(req.top_k, 100), req.date_from, req.date_to)}
 
 
@@ -170,9 +228,10 @@ class AskReq(BaseModel):
 
 
 @app.post("/api/ask")
-def api_ask(req: AskReq):
+def api_ask(req: AskReq, request: Request):
     if not req.question.strip():
         raise HTTPException(400, "empty question")
+    log_query(request, "ask", req.question)
     sources = retrieve(req.question, min(req.top_k, 60), req.date_from, req.date_to)
     answer, error = None, None
     base_url = llm_base_url()
