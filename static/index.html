@@ -38,6 +38,8 @@ button:disabled{opacity:.5;cursor:wait}
 table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden}
 th,td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-align:right}
 th{background:var(--accent-soft);color:var(--ink);font-size:.85rem;white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--accent)}
 td.time{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
 td.date{white-space:nowrap;color:var(--muted)}
 td.title{max-width:220px;font-size:.85rem;color:var(--muted)}
@@ -92,7 +94,9 @@ tr.cited td{border-inline-start:3px solid var(--accent)}
   <div id="status"></div>
   <div class="tablewrap"><table id="results" style="display:none">
     <thead><tr>
-      <th>#</th><th>التاريخ</th><th>التوقيت</th><th>النص والتشغيل</th><th>الحلقة</th>
+      <th id="th-num" class="sortable" title="الترتيب حسب الصلة">#</th>
+      <th id="th-date" class="sortable" title="اضغط للترتيب حسب التاريخ">التاريخ <span id="date-arrow">↕</span></th>
+      <th>التوقيت</th><th>النص والتشغيل</th><th>الحلقة</th>
     </tr></thead>
     <tbody></tbody>
   </table></div>
@@ -163,21 +167,47 @@ async function run(mode){
   }
 }
 
+let lastQuery = '';
+let sortDir = null;   // null = relevance, 'asc' | 'desc' = by date
+
 function renderTable(rows, query){
   lastResults = rows || [];
+  lastQuery = query;
+  sortDir = null;
+  $('#date-arrow').textContent = '↕';
+  if(!lastResults.length){
+    $('#results tbody').innerHTML='';
+    $('#results').style.display='none';
+    $('#status').textContent='لا توجد نتائج.';
+    return;
+  }
+  $('#status').textContent = `${lastResults.length} مقطعاً ذا صلة`;
+  drawRows();
+}
+
+function drawRows(){
   const tb = $('#results tbody');
   tb.innerHTML='';
-  if(!lastResults.length){ $('#status').textContent='لا توجد نتائج.'; return; }
-  $('#status').textContent = `${lastResults.length} مقطعاً ذا صلة`;
-  lastResults.forEach((r,i)=>{
+  const order = lastResults.map((_,i)=>i);
+  if(sortDir){
+    const dir = sortDir==='asc' ? 1 : -1;
+    // stable sort: by date, then by in-video time
+    order.sort((a,b)=>{
+      const ra=lastResults[a], rb=lastResults[b];
+      if(ra.date!==rb.date) return ra.date<rb.date ? -dir : dir;
+      return (ra.start-rb.start)*dir;
+    });
+  }
+  for(const i of order){
+    const r = lastResults[i];
     const tr = document.createElement('tr');
-    tr.id = 'row-'+(i+1);
+    tr.id = 'row-'+(i+1);                 // stable id: AI citations [n] keep working after sorting
     if(r.cited) tr.classList.add('cited');
     tr.innerHTML = `
       <td class="num">${i+1}</td>
       <td class="date">${r.date}</td>
       <td class="time">${r.start_fmt}</td>
-      <td class="txt">${highlight(r.text, query)}
+      <td class="txt">${highlight(r.text, lastQuery)}
         <div class="btns">
           ${r.media_url?`<button onclick="playLocal(${i})">▶ تشغيل</button>`:''}
           ${r.youtube_url?`<a class="yt" href="${r.youtube_url}" target="_blank" rel="noopener">YouTube ↗</a>`:''}
@@ -185,9 +215,22 @@ function renderTable(rows, query){
       </td>
       <td class="title">${esc(r.title)}</td>`;
     tb.appendChild(tr);
-  });
+  }
   $('#results').style.display='table';
 }
+
+$('#th-date').onclick = ()=>{
+  if(!lastResults.length) return;
+  sortDir = sortDir==='desc' ? 'asc' : 'desc';   // first click: newest first
+  $('#date-arrow').textContent = sortDir==='desc' ? '▼' : '▲';
+  drawRows();
+};
+$('#th-num').onclick = ()=>{
+  if(!lastResults.length) return;
+  sortDir = null;
+  $('#date-arrow').textContent = '↕';
+  drawRows();
+};
 
 function scrollToRow(n){
   const el = document.getElementById('row-'+n);
