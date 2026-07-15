@@ -1,0 +1,19 @@
+[Unit]
+Description=Abo Ali Smart Search (semantic search + local RAG)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sayf
+Group=sayf
+WorkingDirectory=/data/abo-ali-search
+Environment=HF_HOME=/data/huggingface
+Environment=CUDA_VISIBLE_DEVICES=0
+ExecStart=/data/abo-ali-search/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8901
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

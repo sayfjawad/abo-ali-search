@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أرشيف أبو علي الشيباني — بحث ذكي</title>
+<style>
+:root{
+  --bg:#f6f3ec; --panel:#fffdf8; --ink:#2b2620; --muted:#7a7060;
+  --accent:#0f766e; --accent-soft:#e4f2f0; --border:#e3dccc; --mark:#ffe9a8;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#171512; --panel:#211e19; --ink:#ece7dd; --muted:#a39a89;
+        --accent:#2dd4bf; --accent-soft:#123f3a; --border:#3a352c; --mark:#5c4d12;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+.searchbar{display:flex;gap:8px;flex-wrap:wrap}
+.searchbar input[type=text]{flex:1;min-width:260px;padding:12px 14px;font-size:1.05rem;
+  border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--ink)}
+button{padding:12px 22px;font-size:1rem;border:0;border-radius:10px;cursor:pointer;
+  background:var(--accent);color:#fff;font-weight:600}
+button.secondary{background:var(--panel);color:var(--accent);border:1px solid var(--accent)}
+button:disabled{opacity:.5;cursor:wait}
+.filters{display:flex;gap:12px;align-items:center;margin:12px 0 4px;flex-wrap:wrap;
+  color:var(--muted);font-size:.9rem}
+.filters input[type=date]{padding:6px 8px;border:1px solid var(--border);border-radius:8px;
+  background:var(--panel);color:var(--ink)}
+#answer{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;
+  padding:16px 18px;margin:20px 0;white-space:pre-wrap;display:none}
+#answer .cite{color:var(--accent);cursor:pointer;font-weight:700;text-decoration:underline}
+#status{margin:18px 0;color:var(--muted)}
+.tablewrap{overflow-x:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-align:right}
+th{background:var(--accent-soft);color:var(--ink);font-size:.85rem;white-space:nowrap}
+td.time{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
+td.date{white-space:nowrap;color:var(--muted)}
+td.title{max-width:220px;font-size:.85rem;color:var(--muted)}
+td.txt{max-width:480px;font-size:.95rem}
+mark{background:var(--mark);border-radius:3px;padding:0 2px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btns a,.btns button{font-size:.8rem;padding:6px 12px;border-radius:8px;text-decoration:none;
+  white-space:nowrap;display:inline-flex;align-items:center}
+a.yt{background:#c4302b;color:#fff}
+/* mobile: collapse table rows into stacked cards */
+@media (max-width: 700px){
+  #results thead{display:none}
+  #results, #results tbody, #results tr, #results td{display:block;width:100%}
+  #results tr{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;
+    background:var(--panel);padding:10px 12px}
+  #results td{border:0;padding:2px 0;max-width:none}
+  td.num,td.date,td.time{display:inline-block;width:auto;margin-inline-end:10px}
+  td.title{font-size:.8rem}
+  #player-box .row{flex-wrap:wrap}
+  #player{max-width:100%;width:100%;max-height:40vh}
+}
+tr.cited td{border-inline-start:3px solid var(--accent)}
+#player-box{position:fixed;bottom:0;inset-inline:0;background:var(--panel);
+  border-top:2px solid var(--accent);padding:10px 16px;display:none;z-index:10;
+  box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+#player-box .row{display:flex;gap:14px;align-items:center;max-width:1100px;margin:0 auto}
+#player{max-height:220px;max-width:390px;border-radius:8px;background:#000}
+#player-info{flex:1;font-size:.85rem;color:var(--muted)}
+#player-close{background:transparent;color:var(--muted);font-size:1.4rem;padding:4px 10px;border:0}
+.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);
+  border-radius:20px;padding:1px 10px;font-size:.75rem;margin-inline-start:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>أرشيف أبو علي الشيباني <span class="badge" id="count-badge"></span></h1>
+  <div class="sub">بحث دلالي ذكي في تفريغات جميع الحلقات — اسأل سؤالاً أو ابحث عن موضوع، وستحصل على المقاطع مع التاريخ والتوقيت وروابط التشغيل.</div>
+
+  <div class="searchbar">
+    <input type="text" id="q" placeholder="مثال: ماذا قال عن سوريا؟ / توقعات الزلازل / المهدي المنتظر…" autofocus>
+    <button id="btn-ask">🤖 اسأل الذكاء الاصطناعي</button>
+    <button id="btn-search" class="secondary">🔍 بحث فقط</button>
+  </div>
+  <div class="filters">
+    <label>من <input type="date" id="date-from"></label>
+    <label>إلى <input type="date" id="date-to"></label>
+    <label>عدد النتائج <select id="topk"><option>20</option><option>40</option><option selected>30</option><option>60</option></select></label>
+  </div>
+
+  <div id="answer"></div>
+  <div id="status"></div>
+  <div class="tablewrap"><table id="results" style="display:none">
+    <thead><tr>
+      <th>#</th><th>التاريخ</th><th>التوقيت</th><th>النص والتشغيل</th><th>الحلقة</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div>
+
+<div id="player-box">
+  <div class="row">
+    <video id="player" controls preload="none"></video>
+    <div id="player-info"></div>
+    <button id="player-close" title="إغلاق">✕</button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let lastResults = [];
+
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+function highlight(text, query){
+  let html = esc(text);
+  const words = [...new Set(query.split(/\s+/).filter(w=>w.length>2))]
+    .sort((a,b)=>b.length-a.length);
+  for(const w of words){
+    try{ html = html.replace(new RegExp(esc(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<mark>$&</mark>'); }catch(e){}
+  }
+  return html;
+}
+function dateVal(id){ const v=$(id).value; return v ? v.replaceAll('-','') : null; }
+
+async function run(mode){
+  const query = $('#q').value.trim();
+  if(!query) return;
+  $('#btn-ask').disabled = $('#btn-search').disabled = true;
+  stopPlayer();
+  $('#results tbody').innerHTML='';
+  $('#answer').style.display='none';
+  $('#status').textContent = mode==='ask' ? '⏳ جارٍ البحث وتوليد الإجابة… (قد يستغرق ثوانٍ)' : '⏳ جارٍ البحث…';
+  $('#results').style.display='none';
+  try{
+    const body = {top_k:+$('#topk').value, date_from:dateVal('#date-from'), date_to:dateVal('#date-to')};
+    let data;
+    if(mode==='ask'){
+      body.question = query;
+      const r = await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      data = await r.json();
+      if(data.answer){
+        $('#answer').innerHTML = esc(data.answer)
+          .replace(/\[(\d+)\]/g,'<span class="cite" onclick="scrollToRow($1)">[$1]</span>');
+        $('#answer').style.display='block';
+      } else if(data.error==='no_llm'){
+        $('#answer').textContent='⚠️ لم يتم العثور على خادم LLM محلي (اضبط LLM_BASE_URL). تُعرض أدناه نتائج البحث الدلالي.';
+        $('#answer').style.display='block';
+      } else if(data.error){
+        $('#answer').textContent='⚠️ خطأ في توليد الإجابة: '+data.error;
+        $('#answer').style.display='block';
+      }
+      renderTable(data.sources, query);
+    } else {
+      body.query = query;
+      const r = await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      data = await r.json();
+      renderTable(data.results, query);
+    }
+  }catch(e){
+    $('#status').textContent = '⚠️ خطأ: '+e;
+  }finally{
+    $('#btn-ask').disabled = $('#btn-search').disabled = false;
+  }
+}
+
+function renderTable(rows, query){
+  lastResults = rows || [];
+  const tb = $('#results tbody');
+  tb.innerHTML='';
+  if(!lastResults.length){ $('#status').textContent='لا توجد نتائج.'; return; }
+  $('#status').textContent = `${lastResults.length} مقطعاً ذا صلة`;
+  lastResults.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+    tr.id = 'row-'+(i+1);
+    if(r.cited) tr.classList.add('cited');
+    tr.innerHTML = `
+      <td class="num">${i+1}</td>
+      <td class="date">${r.date}</td>
+      <td class="time">${r.start_fmt}</td>
+      <td class="txt">${highlight(r.text, query)}
+        <div class="btns">
+          ${r.media_url?`<button onclick="playLocal(${i})">▶ تشغيل</button>`:''}
+          ${r.youtube_url?`<a class="yt" href="${r.youtube_url}" target="_blank" rel="noopener">YouTube ↗</a>`:''}
+        </div>
+      </td>
+      <td class="title">${esc(r.title)}</td>`;
+    tb.appendChild(tr);
+  });
+  $('#results').style.display='table';
+}
+
+function scrollToRow(n){
+  const el = document.getElementById('row-'+n);
+  if(el){ el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.transition='background .3s'; el.style.background='var(--mark)';
+    setTimeout(()=>el.style.background='',1600); }
+}
+
+function playLocal(i){
+  const r = lastResults[i];
+  const p = $('#player');
+  p.src = '/media/'+r.media_file;
+  $('#player-info').innerHTML = `<b>${esc(r.title)}</b><br>${r.date} — يبدأ عند ${r.start_fmt}`;
+  $('#player-box').style.display='block';
+  p.onloadedmetadata = ()=>{ p.currentTime = Math.max(r.start-2,0); p.play(); };
+  p.load();
+}
+function stopPlayer(){
+  const p = $('#player');
+  p.pause();
+  p.removeAttribute('src'); p.load();   // stop buffering/downloading too
+  $('#player-box').style.display='none';
+}
+$('#player-close').onclick = stopPlayer;
+
+$('#btn-ask').onclick = ()=>run('ask');
+$('#btn-search').onclick = ()=>run('search');
+$('#q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(e.ctrlKey?'search':'ask'); });
+
+fetch('/api/stats').then(r=>r.json()).then(d=>{
+  $('#count-badge').textContent = `${d.videos} حلقة · ${d.chunks} مقطع`;
+}).catch(()=>{});
+</script>
+</body>
+</html>
