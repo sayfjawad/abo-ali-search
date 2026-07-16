@@ -1,5 +1,7 @@
 # Abo Ali Smart Search
 
+**English** | [Nederlands](README.nl.md) | [العربية](README.ar.md)
+
 **AI-enabled semantic search and RAG question-answering over a large archive of
 transcribed Arabic videos — fully local, GPU-accelerated, with time-indexed,
 playable results.**
