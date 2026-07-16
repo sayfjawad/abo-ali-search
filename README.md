@@ -4,11 +4,52 @@
 transcribed Arabic videos — fully local, GPU-accelerated, with time-indexed,
 playable results.**
 
+A fact-checking project: making every public claim of a self-proclaimed
+"healer" searchable, so his own words can be checked against each other and
+against reality. See [Why this project exists](#1-why-this-project-exists).
+
 Live deployment: <https://aboali.scrib-r.com>
 
 ---
 
-## 1. What the application is
+## 1. Why this project exists
+
+This is a fact-checking project. Its subject, **Abu Ali Al-Shaibani**, is a
+self-proclaimed clairvoyant who claims to receive messages and instructions
+from his "teacher", and to be able to cure practically any illness — with
+special medicines sold for thousands of euros to unsuspecting viewers of his
+TV show, his website, and his YouTube channel. People close to me have been
+among his victims.
+
+Arguing with him or his followers goes nowhere; that has been tried. So this
+project takes a different approach: **let the man refute himself**. Collect
+everything he has ever said and claimed, across every medium, and make it
+searchable by anyone. When each prediction, claim, and contradiction can be
+found in seconds — with a timestamped, playable video clip as proof — no
+debate is needed.
+
+The plan, in six steps:
+
+1. Find everything he has ever said, across all media formats and sources.
+2. Convert all of his statements to digital text.
+3. Build a data library of his videos, voice, and transcripts.
+4. Make the library searchable using AI techniques (tokenization,
+   vectorization, RAG).
+5. Build an online application so *anyone* can search his claims.
+6. Release everything openly, so the record speaks for itself.
+
+This repository is steps 4–6: the search portal over the transcribed archive.
+The transcription pipeline that feeds it (steps 2–3) grew into a product of
+its own: [scrib-r](https://www.scrib-r.com), a video/audio-to-text
+transcription portal (free while in alpha).
+
+The same setup works for holding *any* public figure accountable to their own
+words. If you know of other charlatans preying on people, I'm happy to help
+take them on too.
+
+---
+
+## 2. What the application is
 
 This application makes a ~2,500-episode video archive (2015–2026, ≈500 GB of
 media plus speaker-diarized transcripts) *searchable by meaning*. Instead of
@@ -37,7 +78,7 @@ the local machine. No cloud APIs are involved and no data leaves the host.
 
 ---
 
-## 2. Architecture
+## 3. Architecture
 
 ```
                        ┌──────────────────────────────────────────────┐
@@ -91,7 +132,7 @@ cross-linked to the source table.
 
 ---
 
-## 3. Technologies
+## 4. Technologies
 
 | Layer | Technology | Why |
 |---|---|---|
@@ -105,7 +146,7 @@ cross-linked to the source table.
 
 ---
 
-## 4. Expected data layout
+## 5. Expected data layout
 
 The indexer reads a flat directory (default `/data/ABO_ALI`) with, per video:
 
@@ -134,7 +175,7 @@ long as the JSON shape matches.
 
 ---
 
-## 5. Setup
+## 6. Setup
 
 ### Requirements
 
@@ -143,6 +184,27 @@ long as the JSON shape matches.
 - ~500 MB disk for the index (at 160k chunks)
 - Optional: a running OpenAI-compatible LLM server for the Ask-AI mode
 - Optional: Docker (only for auto-discovery of the default llama.cpp container)
+
+### Hardware guidance for the full pipeline
+
+Want to build an archive like this yourself, end to end? Rough guidance from
+this project:
+
+**Searchable library + local LLM (this repo):**
+
+- GPU with at least 16 GB VRAM — 24 GB works well, 32 GB (e.g. an RTX 5090)
+  is ideal for comfortably running both the embedding model and an answer LLM
+- A current-generation CPU (i5 / Ryzen 5 or newer)
+- An internet connection to host the site
+
+**Transcription (upstream, e.g. [scrib-r](https://github.com/sayfjawad/scrib-r)):**
+
+- GPU with 8 GB VRAM and 16 GB system RAM
+- A modern CPU (i5 / Ryzen 5 or newer recommended)
+- Enough SSD space for the media you collect — this archive uses ~500 GB
+
+With that setup — and, if needed, an online AI on the side — you can put any
+shady public figure under the microscope.
 
 ### Install
 
@@ -205,7 +267,7 @@ smooth video streaming through the proxy.
 
 ---
 
-## 6. Configuration
+## 7. Configuration
 
 All optional, via environment variables (see `run.sh` / the systemd unit):
 
@@ -222,7 +284,7 @@ Paths that live in code: archive directory (`DATA_DIR` in `build_index.py`,
 
 ---
 
-## 7. HTTP API
+## 8. HTTP API
 
 | Endpoint | Method | Body / params | Returns |
 |---|---|---|---|
@@ -241,7 +303,7 @@ curl -s localhost:8901/api/search -H 'Content-Type: application/json' \
 
 ---
 
-## 8. Performance (reference hardware: Tesla V100 32 GB)
+## 9. Performance (reference hardware: Tesla V100 32 GB)
 
 | Operation | Measured |
 |---|---|
@@ -252,7 +314,7 @@ curl -s localhost:8901/api/search -H 'Content-Type: application/json' \
 
 ---
 
-## 9. Repository layout
+## 10. Repository layout
 
 ```
 app.py                  FastAPI backend (search, ask, media, stats)
@@ -265,3 +327,17 @@ deploy/
   nginx-aboali.conf     reverse-proxy template (TLS added by certbot)
 index/                  generated — not committed (sqlite + npy)
 ```
+
+---
+
+## 11. Support this project
+
+The website, the data collection, and the hardware all cost time and money.
+Every form of help is welcome:
+
+**[Donate via GoFundMe — help keep this archive online](https://www.gofundme.com/f/factchecken-met-ai-help-dit-archief-in-de-lucht-te-houden)**
+
+Other ways to help: report new videos or sources that are missing from the
+archive, improve the code via issues and pull requests, or use this project
+as a blueprint to fact-check another charlatan — I'm happy to help you get
+started.
