@@ -16,8 +16,26 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif;line-height:1.7}
-.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
-h1{font-size:1.5rem;margin:0 0 4px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 16px 80px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;border-radius:16px;overflow:hidden;margin-bottom:20px;
+  border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.hero img{width:100%;height:320px;object-fit:cover;object-position:center 18%;display:block}
+.hero .shade{position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(10,12,18,.86) 0%, rgba(10,12,18,.35) 45%, rgba(10,12,18,.05) 75%)}
+.hero .hero-text{position:absolute;bottom:0;inset-inline:0;padding:18px 22px;color:#f5f2ea}
+.hero h1{font-size:1.7rem;margin:0 0 2px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.hero .tagline{margin:0;font-size:1rem;color:#e3ddcf;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.badge{display:inline-block;background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(4px);
+  border-radius:20px;padding:1px 12px;font-size:.75rem;margin-inline-start:8px;vertical-align:middle}
+.badge:empty{display:none}
+#lang-toggle{position:absolute;top:12px;inset-inline-end:12px;z-index:2;
+  background:rgba(10,12,18,.55);color:#fff;border:1px solid rgba(255,255,255,.35);
+  border-radius:20px;padding:6px 16px;font-size:.85rem;cursor:pointer;backdrop-filter:blur(4px)}
+#lang-toggle:hover{background:rgba(10,12,18,.8)}
+@media (max-width:700px){ .hero img{height:200px} .hero h1{font-size:1.25rem} .hero .tagline{font-size:.85rem} }
+
 .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
 .searchbar{display:flex;gap:8px;flex-wrap:wrap}
 .searchbar input[type=text]{flex:1;min-width:260px;padding:12px 14px;font-size:1.05rem;
@@ -36,7 +54,7 @@ button:disabled{opacity:.5;cursor:wait}
 #status{margin:18px 0;color:var(--muted)}
 .tablewrap{overflow-x:auto;margin-top:10px}
 table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-align:right}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-align:start}
 th{background:var(--accent-soft);color:var(--ink);font-size:.85rem;white-space:nowrap}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--accent)}
@@ -49,6 +67,20 @@ mark{background:var(--mark);border-radius:3px;padding:0 2px}
 .btns a,.btns button{font-size:.8rem;padding:6px 12px;border-radius:8px;text-decoration:none;
   white-space:nowrap;display:inline-flex;align-items:center}
 a.yt{background:#c4302b;color:#fff}
+
+/* ---------- about / mission ---------- */
+.about{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:20px 24px;margin:26px 0;font-size:.95rem}
+.about h2{margin:0 0 10px;font-size:1.2rem;color:var(--accent)}
+.about h3{margin:18px 0 6px;font-size:1rem}
+.about p{margin:8px 0}
+.about ol{margin:8px 0;padding-inline-start:22px}
+.about a{color:var(--accent);font-weight:600}
+.support{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.support a{display:inline-block;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700}
+.support a.donate{background:#16a34a;color:#fff}
+.support a.gh{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+
 /* mobile: collapse table rows into stacked cards */
 @media (max-width: 700px){
   #results thead{display:none}
@@ -69,49 +101,190 @@ tr.cited td{border-inline-start:3px solid var(--accent)}
 #player{max-height:220px;max-width:390px;border-radius:8px;background:#000}
 #player-info{flex:1;font-size:.85rem;color:var(--muted)}
 #player-close{background:transparent;color:var(--muted);font-size:1.4rem;padding:4px 10px;border:0}
-.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);
-  border-radius:20px;padding:1px 10px;font-size:.75rem;margin-inline-start:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>أرشيف أبو علي الشيباني <span class="badge" id="count-badge"></span></h1>
-  <div class="sub">بحث دلالي ذكي في تفريغات جميع الحلقات — اسأل سؤالاً أو ابحث عن موضوع، وستحصل على المقاطع مع التاريخ والتوقيت وروابط التشغيل.
-    <a href="/stats.html" style="color:var(--accent)">📊 الإحصائيات</a></div>
+
+  <header class="hero">
+    <img src="/hero.jpg" alt="">
+    <div class="shade"></div>
+    <button id="lang-toggle">English</button>
+    <div class="hero-text">
+      <h1><span data-i18n="heroTitle">أرشيف أبو علي الشيباني</span> <span class="badge" id="count-badge"></span></h1>
+      <p class="tagline" data-i18n="heroTagline">كل ما قاله، موثَّق وقابل للبحث — دَع الرجل يكذّب نفسه بنفسه.</p>
+    </div>
+  </header>
+
+  <div class="sub"><span data-i18n="sub">بحث دلالي ذكي في تفريغات جميع الحلقات — اسأل سؤالاً أو ابحث عن موضوع، وستحصل على المقاطع مع التاريخ والتوقيت وروابط التشغيل.</span>
+    <a href="/stats.html" style="color:var(--accent)" data-i18n="statsLink">📊 الإحصائيات</a></div>
 
   <div class="searchbar">
-    <input type="text" id="q" placeholder="مثال: ماذا قال عن سوريا؟ / توقعات الزلازل / المهدي المنتظر…" autofocus>
-    <button id="btn-ask">🤖 اسأل الذكاء الاصطناعي</button>
-    <button id="btn-search" class="secondary">🔍 بحث فقط</button>
+    <input type="text" id="q" autofocus>
+    <button id="btn-ask" data-i18n="btnAsk">🤖 اسأل الذكاء الاصطناعي</button>
+    <button id="btn-search" class="secondary" data-i18n="btnSearch">🔍 بحث فقط</button>
   </div>
   <div class="filters">
-    <label>من <input type="date" id="date-from"></label>
-    <label>إلى <input type="date" id="date-to"></label>
-    <label>عدد النتائج <select id="topk"><option>20</option><option>40</option><option selected>30</option><option>60</option></select></label>
+    <label><span data-i18n="from">من</span> <input type="date" id="date-from"></label>
+    <label><span data-i18n="to">إلى</span> <input type="date" id="date-to"></label>
+    <label><span data-i18n="topk">عدد النتائج</span> <select id="topk"><option>20</option><option>40</option><option selected>30</option><option>60</option></select></label>
   </div>
 
   <div id="answer"></div>
   <div id="status"></div>
   <div class="tablewrap"><table id="results" style="display:none">
     <thead><tr>
-      <th id="th-num" class="sortable" title="الترتيب حسب الصلة">#</th>
-      <th id="th-date" class="sortable" title="اضغط للترتيب حسب التاريخ">التاريخ <span id="date-arrow">↕</span></th>
-      <th>التوقيت</th><th>النص والتشغيل</th><th>الحلقة</th>
+      <th id="th-num" class="sortable">#</th>
+      <th id="th-date" class="sortable"><span data-i18n="thDate">التاريخ</span> <span id="date-arrow">↕</span></th>
+      <th data-i18n="thTime">التوقيت</th><th data-i18n="thText">النص والتشغيل</th><th data-i18n="thEpisode">الحلقة</th>
     </tr></thead>
     <tbody></tbody>
   </table></div>
+
+  <!-- ---------- mission / about (Arabic) ---------- -->
+  <section class="about" id="about-ar">
+    <h2>لماذا هذا الموقع؟</h2>
+    <p><b>أبو علي الشيباني</b> يقدّم نفسه وسيطاً روحانياً يتلقى رسائل وتعليمات من "معلّمه"،
+    ويزعم قدرته على شفاء الناس من كل الأمراض تقريباً — بأدوية خاصة تُباع بآلاف الدولارات
+    لمشاهدي برنامجه التلفزيوني وموقعه وقناته على يوتيوب. وقد وقع أشخاص أعزّاء علينا ضحيةً لهذه الممارسات.</p>
+    <p>الجدال معه أو مع أتباعه لا يجدي؛ وقد جُرِّب مراراً. لذلك يسلك هذا المشروع طريقاً آخر:
+    <b>جُمع هنا كل ما قاله</b> — أكثر من ٢٥٠٠ حلقة منذ عام ٢٠١٥، فُرِّغت نصياً بالذكاء الاصطناعي —
+    وأصبح قابلاً للبحث لأي شخص. ابحث بنفسك عن نبوءاته وادّعاءاته، وقارن كلامه بعضه ببعض وبالواقع.
+    كل نتيجة تأتي موثَّقة: التاريخ، والتوقيت داخل الحلقة، ورابط لمشاهدة اللحظة نفسها.</p>
+    <h3>كيف تستخدمه؟</h3>
+    <p>اكتب سؤالاً أو موضوعاً في خانة البحث أعلاه — مثلاً: «ماذا قال عن الزلازل؟» أو «علاج السرطان».
+    زر <b>«بحث فقط»</b> يعرض المقاطع المطابقة، وزر <b>«اسأل الذكاء الاصطناعي»</b> يكتب لك خلاصة
+    موثَّقة بالمصادر مما قاله فعلاً. البحث يعمل بالمعنى لا بالكلمات الحرفية، فاسأل بأسلوبك الخاص.</p>
+    <h3>ساعدنا على الاستمرار</h3>
+    <p>الموقع والبيانات والعتاد تكلّف وقتاً ومالاً. المشروع مفتوح المصدر بالكامل،
+    والطريقة نفسها تصلح لكشف أي دجّال آخر يستغل الناس.</p>
+    <div class="support">
+      <a class="donate" href="https://www.gofundme.com/f/factchecken-met-ai-help-dit-archief-in-de-lucht-te-houden" target="_blank" rel="noopener">💚 تبرّع لدعم الأرشيف</a>
+      <a class="gh" href="https://github.com/sayfjawad/abo-ali-search" target="_blank" rel="noopener">⭐ الشيفرة على GitHub</a>
+      <a class="gh" href="https://www.scrib-r.com" target="_blank" rel="noopener">🎙 scrib-r — تفريغ نصي بالذكاء الاصطناعي</a>
+    </div>
+  </section>
+
+  <!-- ---------- mission / about (English) ---------- -->
+  <section class="about" id="about-en" style="display:none">
+    <h2>Why does this site exist?</h2>
+    <p><b>Abu Ali Al-Shaibani</b> presents himself as a clairvoyant who receives messages and
+    instructions from his "teacher", and claims to cure practically any illness — with special
+    medicines sold for thousands of dollars to viewers of his TV show, his website and his
+    YouTube channel. People dear to us have been among his victims.</p>
+    <p>Arguing with him or his followers goes nowhere; that has been tried. So this project takes
+    a different approach: <b>everything he has ever said has been collected here</b> — over 2,500
+    episodes since 2015, transcribed with AI — and made searchable for everyone. Look up his
+    predictions and claims yourself, and compare his words with each other and with reality.
+    Every result is documented: the date, the timestamp within the episode, and a link to watch
+    that exact moment.</p>
+    <h3>How to use it</h3>
+    <p>Type a question or topic in the search box above — for example: "What did he say about
+    earthquakes?" or "cancer cure". The <b>"Search only"</b> button shows the matching clips;
+    the <b>"Ask the AI"</b> button writes a summary of what he actually said, with sources.
+    The search works by meaning, not literal keywords, so ask in your own words. Note: the
+    archive is in Arabic, so Arabic queries give the best results.</p>
+    <h3>Help keep it running</h3>
+    <p>The website, the data and the hardware cost time and money. The project is fully open
+    source, and the same approach works for exposing any other charlatan preying on people.</p>
+    <div class="support">
+      <a class="donate" href="https://www.gofundme.com/f/factchecken-met-ai-help-dit-archief-in-de-lucht-te-houden" target="_blank" rel="noopener">💚 Donate to support the archive</a>
+      <a class="gh" href="https://github.com/sayfjawad/abo-ali-search" target="_blank" rel="noopener">⭐ Code on GitHub</a>
+      <a class="gh" href="https://www.scrib-r.com" target="_blank" rel="noopener">🎙 scrib-r — AI transcription</a>
+    </div>
+  </section>
+
 </div>
 
 <div id="player-box">
   <div class="row">
     <video id="player" controls preload="none"></video>
     <div id="player-info"></div>
-    <button id="player-close" title="إغلاق">✕</button>
+    <button id="player-close" title="✕">✕</button>
   </div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
+
+/* ---------------- i18n ---------------- */
+const I18N = {
+  ar: {
+    docTitle:'أرشيف أبو علي الشيباني — بحث ذكي',
+    heroTitle:'أرشيف أبو علي الشيباني',
+    heroTagline:'كل ما قاله، موثَّق وقابل للبحث — دَع الرجل يكذّب نفسه بنفسه.',
+    sub:'بحث دلالي ذكي في تفريغات جميع الحلقات — اسأل سؤالاً أو ابحث عن موضوع، وستحصل على المقاطع مع التاريخ والتوقيت وروابط التشغيل.',
+    statsLink:'📊 الإحصائيات',
+    placeholder:'مثال: ماذا قال عن سوريا؟ / توقعات الزلازل / المهدي المنتظر…',
+    btnAsk:'🤖 اسأل الذكاء الاصطناعي', btnSearch:'🔍 بحث فقط',
+    from:'من', to:'إلى', topk:'عدد النتائج',
+    thDate:'التاريخ', thTime:'التوقيت', thText:'النص والتشغيل', thEpisode:'الحلقة',
+    thNumTitle:'الترتيب حسب الصلة', thDateTitle:'اضغط للترتيب حسب التاريخ',
+    statusAsking:'⏳ جارٍ البحث وتوليد الإجابة… (قد يستغرق ثوانٍ)',
+    statusSearching:'⏳ جارٍ البحث…',
+    statusNone:'لا توجد نتائج.',
+    statusCount:n=>`${n} مقطعاً ذا صلة`,
+    errNoLLM:'⚠️ لم يتم العثور على خادم LLM محلي (اضبط LLM_BASE_URL). تُعرض أدناه نتائج البحث الدلالي.',
+    errAnswer:'⚠️ خطأ في توليد الإجابة: ',
+    errGeneric:'⚠️ خطأ: ',
+    play:'▶ تشغيل', startsAt:'يبدأ عند',
+    badge:(v,c)=>`${v} حلقة · ${c} مقطع`,
+    langBtn:'English'
+  },
+  en: {
+    docTitle:'Abu Ali Al-Shaibani Archive — Smart Search',
+    heroTitle:'The Abu Ali Al-Shaibani Archive',
+    heroTagline:'Everything he ever said, documented and searchable — let the man refute himself.',
+    sub:'Smart semantic search across the transcripts of all episodes — ask a question or search a topic, and get the clips with date, timestamp and playback links. (The archive is in Arabic; Arabic queries give the best results.)',
+    statsLink:'📊 Statistics',
+    placeholder:'e.g. What did he say about Syria? / earthquake predictions / the Mahdi…',
+    btnAsk:'🤖 Ask the AI', btnSearch:'🔍 Search only',
+    from:'From', to:'To', topk:'Results',
+    thDate:'Date', thTime:'Time', thText:'Text & playback', thEpisode:'Episode',
+    thNumTitle:'Sort by relevance', thDateTitle:'Click to sort by date',
+    statusAsking:'⏳ Searching and generating an answer… (may take a few seconds)',
+    statusSearching:'⏳ Searching…',
+    statusNone:'No results.',
+    statusCount:n=>`${n} relevant segments`,
+    errNoLLM:'⚠️ No local LLM server found (set LLM_BASE_URL). Semantic search results are shown below.',
+    errAnswer:'⚠️ Error generating the answer: ',
+    errGeneric:'⚠️ Error: ',
+    play:'▶ Play', startsAt:'starts at',
+    badge:(v,c)=>`${v} episodes · ${c} segments`,
+    langBtn:'عربي'
+  }
+};
+let lang = new URLSearchParams(location.search).get('lang')
+        || localStorage.getItem('lang') || 'ar';
+if(!I18N[lang]) lang = 'ar';
+const t = k => I18N[lang][k];
+
+let stats = null;          // {videos, chunks} once loaded
+let lastStatus = null;     // {key} or {key:'statusCount', n}
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  document.title = t('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  $('#q').placeholder = t('placeholder');
+  $('#th-num').title = t('thNumTitle');
+  $('#th-date').title = t('thDateTitle');
+  $('#lang-toggle').textContent = t('langBtn');
+  $('#about-ar').style.display = lang==='ar' ? '' : 'none';
+  $('#about-en').style.display = lang==='en' ? '' : 'none';
+  if(stats) $('#count-badge').textContent = t('badge')(stats.videos, stats.chunks);
+  if(lastStatus) $('#status').textContent =
+    lastStatus.key==='statusCount' ? t('statusCount')(lastStatus.n) : t(lastStatus.key);
+  if(lastResults.length) drawRows();
+}
+$('#lang-toggle').onclick = ()=>{
+  lang = lang==='ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', lang);
+  applyLang();
+};
+
+/* ---------------- search / RAG ---------------- */
 let lastResults = [];
 
 function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
@@ -125,6 +298,8 @@ function highlight(text, query){
   return html;
 }
 function dateVal(id){ const v=$(id).value; return v ? v.replaceAll('-','') : null; }
+function setStatus(key, n){ lastStatus = {key, n};
+  $('#status').textContent = key==='statusCount' ? t('statusCount')(n) : t(key); }
 
 async function run(mode){
   const query = $('#q').value.trim();
@@ -133,7 +308,7 @@ async function run(mode){
   stopPlayer();
   $('#results tbody').innerHTML='';
   $('#answer').style.display='none';
-  $('#status').textContent = mode==='ask' ? '⏳ جارٍ البحث وتوليد الإجابة… (قد يستغرق ثوانٍ)' : '⏳ جارٍ البحث…';
+  setStatus(mode==='ask' ? 'statusAsking' : 'statusSearching');
   $('#results').style.display='none';
   try{
     const body = {top_k:+$('#topk').value, date_from:dateVal('#date-from'), date_to:dateVal('#date-to')};
@@ -147,10 +322,10 @@ async function run(mode){
           .replace(/\[(\d+)\]/g,'<span class="cite" onclick="scrollToRow($1)">[$1]</span>');
         $('#answer').style.display='block';
       } else if(data.error==='no_llm'){
-        $('#answer').textContent='⚠️ لم يتم العثور على خادم LLM محلي (اضبط LLM_BASE_URL). تُعرض أدناه نتائج البحث الدلالي.';
+        $('#answer').textContent=t('errNoLLM');
         $('#answer').style.display='block';
       } else if(data.error){
-        $('#answer').textContent='⚠️ خطأ في توليد الإجابة: '+data.error;
+        $('#answer').textContent=t('errAnswer')+data.error;
         $('#answer').style.display='block';
       }
       renderTable(data.sources, query);
@@ -161,7 +336,8 @@ async function run(mode){
       renderTable(data.results, query);
     }
   }catch(e){
-    $('#status').textContent = '⚠️ خطأ: '+e;
+    lastStatus = null;
+    $('#status').textContent = t('errGeneric')+e;
   }finally{
     $('#btn-ask').disabled = $('#btn-search').disabled = false;
   }
@@ -178,10 +354,10 @@ function renderTable(rows, query){
   if(!lastResults.length){
     $('#results tbody').innerHTML='';
     $('#results').style.display='none';
-    $('#status').textContent='لا توجد نتائج.';
+    setStatus('statusNone');
     return;
   }
-  $('#status').textContent = `${lastResults.length} مقطعاً ذا صلة`;
+  setStatus('statusCount', lastResults.length);
   drawRows();
 }
 
@@ -209,7 +385,7 @@ function drawRows(){
       <td class="time">${r.start_fmt}</td>
       <td class="txt">${highlight(r.text, lastQuery)}
         <div class="btns">
-          ${r.media_url?`<button onclick="playLocal(${i})">▶ تشغيل</button>`:''}
+          ${r.media_url?`<button onclick="playLocal(${i})">${t('play')}</button>`:''}
           ${r.youtube_url?`<a class="yt" href="${r.youtube_url}" target="_blank" rel="noopener">YouTube ↗</a>`:''}
         </div>
       </td>
@@ -243,7 +419,7 @@ function playLocal(i){
   const r = lastResults[i];
   const p = $('#player');
   p.src = '/media/'+r.media_file;
-  $('#player-info').innerHTML = `<b>${esc(r.title)}</b><br>${r.date} — يبدأ عند ${r.start_fmt}`;
+  $('#player-info').innerHTML = `<b>${esc(r.title)}</b><br>${r.date} — ${t('startsAt')} ${r.start_fmt}`;
   $('#player-box').style.display='block';
   p.onloadedmetadata = ()=>{ p.currentTime = Math.max(r.start-2,0); p.play(); };
   p.load();
@@ -261,8 +437,11 @@ $('#btn-search').onclick = ()=>run('search');
 $('#q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(e.ctrlKey?'search':'ask'); });
 
 fetch('/api/stats').then(r=>r.json()).then(d=>{
-  $('#count-badge').textContent = `${d.videos} حلقة · ${d.chunks} مقطع`;
+  stats = d;
+  $('#count-badge').textContent = t('badge')(d.videos, d.chunks);
 }).catch(()=>{});
+
+applyLang();
 </script>
 </body>
 </html>
