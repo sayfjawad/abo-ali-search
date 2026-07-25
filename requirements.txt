@@ -1,0 +1,7 @@
+# Enough to run quickstart.sh, build_index.py and the search app (app.py)
+# against the transcripts already checked into archive-data/.
+fastapi
+uvicorn
+torch
+transformers
+numpy

@@ -221,16 +221,36 @@ python3 -m venv --system-site-packages .venv   # reuse a system CUDA torch if pr
 > hosts), `--system-site-packages` avoids a second multi-GB install. On a clean
 > machine, drop the flag and let pip install torch.
 
+### Quickstart from the checked-in archive (no video download needed)
+
+The actual transcripts are committed to this repo under `archive-data/` (see
+`archive-data/README.md`) -- real transcription/diarization work, the
+expensive part. That means a working, searchable app is one command away,
+without collecting a single video yourself:
+
+```bash
+pip install -r requirements.txt   # or reuse the .venv from Install, above
+./quickstart.sh
+```
+
+Builds an index at `./local-index/` from `archive-data/`, isolated from any
+real deployment via `DATA_DIR`/`INDEX_DIR` env vars (never touches `./index/`).
+Prints the exact command to start the app against it. Search and the AI
+summary work fully; local video playback doesn't, since the raw video files
+aren't checked in, only the transcripts derived from them.
+
 ### Build the index
 
 ```bash
-# adjust DATA_DIR in build_index.py if your archive lives elsewhere
+# DATA_DIR / INDEX_DIR env vars override where the archive/index live
+# (default: /data/ABO_ALI and ./index/) -- see quickstart.sh for an example
 CUDA_VISIBLE_DEVICES=0 .venv/bin/python build_index.py
 ```
 
 First run downloads the BGE-M3 model (~2.3 GB) into `HF_HOME`. Indexing the
 full 2,500-video corpus takes ~8 minutes on a V100. Re-run whenever new videos
-are added (the index is rebuilt from scratch; it's cheap).
+are added (the index is rebuilt from scratch; it's cheap -- and now backs up
+the previous index to `index/backups/<date>/` first, unconditionally).
 
 ### Run
 

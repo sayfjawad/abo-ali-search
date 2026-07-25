@@ -20,8 +20,8 @@ from pydantic import BaseModel
 from embedder import Embedder
 
 BASE = Path(__file__).parent
-INDEX_DIR = BASE / "index"
-MEDIA_DIR = Path("/data/ABO_ALI")
+INDEX_DIR = Path(os.environ.get("INDEX_DIR", BASE / "index"))
+MEDIA_DIR = Path(os.environ.get("DATA_DIR", "/data/ABO_ALI"))
 STATS_DB = BASE / "stats.sqlite"  # outside index/ so re-indexing keeps history
 
 app = FastAPI(title="Abo Ali Smart Search")

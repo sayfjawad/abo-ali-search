@@ -4,3 +4,6 @@ index/
 *.log
 nohup.out
 stats.sqlite
+local-data/
+local-index/
+index.sqlite

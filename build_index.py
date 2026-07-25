@@ -8,9 +8,11 @@ and writes:
 """
 import json
 import os
+import shutil
 import sqlite3
 import sys
 import time
+from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -18,8 +20,8 @@ import torch
 
 from embedder import Embedder, DIM
 
-DATA_DIR = Path("/data/ABO_ALI")
-INDEX_DIR = Path(__file__).parent / "index"
+DATA_DIR = Path(os.environ.get("DATA_DIR", "/data/ABO_ALI"))
+INDEX_DIR = Path(os.environ.get("INDEX_DIR", Path(__file__).parent / "index"))
 MERGE_TARGET_CHARS = 700  # merge consecutive same-speaker segments up to this size
 
 
@@ -68,6 +70,37 @@ def merge_segments(segments):
     return chunks
 
 
+BACKUP_RETENTION_DAYS = 14
+
+
+def backup_and_prune_index():
+    """Copy the current index.sqlite + embeddings.npy to
+    index/backups/<YYYY-MM-DD>/ before this run overwrites them, and drop
+    backups older than BACKUP_RETENTION_DAYS. Added 2026-07-24 after a
+    rebuild wiped the live index down to 1 video with no way back short of
+    restoring the source transcripts from a copy found on another host --
+    never again should one bad build_index.py run be unrecoverable."""
+    backups_dir = INDEX_DIR / "backups"
+    today_dir = backups_dir / date.today().isoformat()
+    src_db = INDEX_DIR / "index.sqlite"
+    src_emb = INDEX_DIR / "embeddings.npy"
+    if not today_dir.exists() and (src_db.exists() or src_emb.exists()):
+        today_dir.mkdir(parents=True, exist_ok=True)
+        for src in (src_db, src_emb):
+            if src.exists():
+                shutil.copy2(src, today_dir / src.name)
+        print(f"backup: {today_dir}", flush=True)
+    cutoff = date.today() - timedelta(days=BACKUP_RETENTION_DAYS)
+    if backups_dir.exists():
+        for d in backups_dir.iterdir():
+            try:
+                old = date.fromisoformat(d.name) < cutoff
+            except ValueError:
+                continue
+            if old:
+                shutil.rmtree(d, ignore_errors=True)
+
+
 def find_media_file(base: str) -> str:
     for ext in (".mp4", ".f140.m4a", ".m4a"):
         if (DATA_DIR / f"{base}{ext}").exists():
@@ -77,6 +110,7 @@ def find_media_file(base: str) -> str:
 
 def main():
     INDEX_DIR.mkdir(exist_ok=True)
+    backup_and_prune_index()
     db_path = INDEX_DIR / "index.sqlite"
     if db_path.exists():
         db_path.unlink()
@@ -126,7 +160,8 @@ def main():
     print(f"parsed {n_videos} videos -> {chunk_id} chunks", flush=True)
 
     print("pass 2: embedding on GPU...", flush=True)
-    embedder = Embedder(device="cuda:0")
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    embedder = Embedder(device=device)
     tok = embedder.tokenizer
 
     # Sort by tokenized length for efficient batching, then restore order.
