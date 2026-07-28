@@ -93,8 +93,8 @@ def api_statistics():
         ).fetchone()
         per_day = conn.execute("""
             SELECT date(ts) d, COUNT(*), COUNT(DISTINCT ip)
-            FROM queries WHERE ts >= datetime('now','-14 days')
-            GROUP BY d ORDER BY d DESC""").fetchall()
+            FROM queries WHERE ts >= datetime('now','-30 days')
+            GROUP BY d ORDER BY d""").fetchall()
         first = conn.execute("SELECT MIN(date(ts)) FROM queries").fetchone()[0]
     return {
         "total_queries": total,
