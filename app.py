@@ -185,8 +185,13 @@ def api_search(req: SearchReq, request: Request):
 #   LLM_API_KEY   default: none (local servers ignore it)
 import subprocess
 
-LLM_MODEL_ID = os.environ.get("LLM_MODEL_ID", "qwen3-8b")
+LLM_MODEL_ID = os.environ.get("LLM_MODEL_ID", "gpt-oss-120b")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "none")
+# GPT-OSS/harmony reasoning effort for the RAG answer step (low/medium/high).
+# NOT the Qwen3 "/no_think" convention this used to rely on — that has no
+# effect on harmony-format models. low = fast, minimal thinking, appropriate
+# for a citation-grounded RAG answer.
+LLM_REASONING_EFFORT = os.environ.get("LLM_REASONING_EFFORT", "low")
 
 
 def llm_base_url() -> str | None:
@@ -250,18 +255,25 @@ def api_ask(req: AskReq, request: Request):
                 "model": LLM_MODEL_ID,
                 "max_tokens": 2048,
                 "temperature": 0.3,
+                "reasoning_effort": LLM_REASONING_EFFORT,
                 "messages": [
                     {"role": "system", "content": ANSWER_SYSTEM},
                     {"role": "user",
-                     "content": f"المقتطفات:\n\n{excerpts}\n\nالسؤال: {req.question} /no_think"},
+                     "content": f"المقتطفات:\n\n{excerpts}\n\nالسؤال: {req.question}"},
                 ],
             },
             timeout=180.0,
         )
         resp.raise_for_status()
-        answer = resp.json()["choices"][0]["message"]["content"]
-        # strip <think>...</think> reasoning blocks some local models emit
+        message = resp.json()["choices"][0]["message"]
+        answer = message.get("content") or ""
+        # strip <think>...</think> reasoning blocks some local models emit inline
         answer = re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL).strip()
+        if not answer and message.get("reasoning_content"):
+            # reasoning model spent its whole token budget thinking instead of
+            # answering (seen with unthrottled reasoning models) — surface as
+            # an error instead of silently returning an empty answer.
+            error = "empty_answer_reasoning_only"
         cited = {int(n) for n in re.findall(r"\[(\d+)\]", answer)}
         if cited:
             for i, s in enumerate(sources):
