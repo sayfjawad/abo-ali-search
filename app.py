@@ -125,7 +125,7 @@ def yt_link(url: str, start: float) -> str:
 
 def retrieve(query: str, top_k: int, date_from: str | None, date_to: str | None):
     st = _state
-    q = st["embedder"].encode([query]).to(st["device"])  # (1, 1024)
+    q = st["embedder"].encode([query]).to(device=st["device"], dtype=st["matrix"].dtype)  # (1, 1024)
     scores = (st["matrix"] @ q.T).squeeze(1).float()  # (n,)
     if date_from:
         scores = torch.where(st["dates"] >= int(date_from), scores, torch.tensor(-1.0, device=scores.device))
